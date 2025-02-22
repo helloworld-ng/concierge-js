@@ -504,10 +504,10 @@ class Concierge {
       });
     } finally {
       this.isLoading = false;
-      submitBtn.disabled = false;
       this.hideLoadingIndicator();
       this.setAgentActive(false);
       input.value = '';
+      submitBtn.disabled = true;
     }
   }
 
