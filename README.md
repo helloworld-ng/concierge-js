@@ -8,6 +8,8 @@ An open-source JavaScript library for easily adding AI chat assistants to your w
 - 🎨 Customizable UI
 - 🤖 OpenAI integration out of the box
 - 📚 Support for loading external knowledge sources
+- 🔄 Custom backend support
+- 🏷️ Source categorization
 
 ## Quick Start
 
@@ -28,10 +30,7 @@ An open-source JavaScript library for easily adding AI chat assistants to your w
 ```javascript
 const chat = concierge.init({
   triggerSelector: '#chat-trigger',
-  name: 'AI Assistant',
-  keys: {
-    openai: 'your-openai-key'
-  }
+  name: 'AI Assistant'
 });
 ```
 
@@ -45,7 +44,6 @@ concierge.init({
   // Optional
   name: 'AI Assistant',              // Name of your chat assistant
   avatar: '<svg>...</svg>',          // SVG string or image URL
-  strict: true,                      // Enforce strict responses based on provided data
   isFullScreen: true,               // Whether to show in full screen
   color: {
     chatBg: '#011B33',              // Chat background color
@@ -54,28 +52,30 @@ concierge.init({
     inputBg: '#1f2937',             // Input field background
     buttonBg: '#2563eb',            // Submit button background
   },
-  sources: [                         // External knowledge sources
+  sources: [                         // External knowledge sources with categories
     {
       type: 'web',
       url: 'https://your-docs.com',
-      pages: ['/about', '/docs', '/api'] // Optional pages to load
+      category: ['documentation' ]     // Optional category for this source
     },
     {
       type: 'json',
-      url: 'https://your-docs.com/data.json'
+      url: 'https://your-docs.com/data.json',
+      category: ['api-reference'  ]    // Optional category for this source
     }
   ],
   systemPrompt: 'Custom prompt...',  // System prompt for the AI
   model: 'gpt-4',                    // AI model to use
-  keys: {
-    openai: 'your-openai-key'       // Your OpenAI API key
+  server: {                          // Optional server configuration
+    baseUrl: 'https://your-api.com', // Your API base URL
+    apiKey: 'your-api-key'          // Your API key
   }
 });
 ```
 
-## Loading External Sources
+## Loading External Sources with Categories
 
-Concierge can load external knowledge sources to provide context-aware responses. It supports two types of sources:
+Concierge supports categorizing knowledge sources to help the AI provide more accurate and specific responses. Each source can have its own category:
 
 ### Web Pages
 
@@ -85,7 +85,12 @@ concierge.init({
     {
       type: 'web',
       url: 'https://your-website.com',
-      pages: ['/about', '/docs', '/contact'] // Optional pages to load
+      category: ['company-info']       // Categorize this source
+    },
+    {
+      type: 'web',
+      url: 'https://your-website.com',
+      category: ['technical-docs']     // Different category for API docs
     }
   ]
 });
@@ -98,28 +103,69 @@ concierge.init({
   sources: [
     {
       type: 'json',
-      url: '/api/data.json'
+      url: '/api/products.json',
+      category: ['product-catalog']
+    },
+    {
+      type: 'json',
+      url: '/api/pricing.json',
+      category: ['pricing-info']
     }
   ]
 });
 ```
 
-## Strict Mode
+## Custom Backend Configuration
 
-Enable strict mode to ensure the AI only responds with information from the provided sources:
+Concierge can be configured to work with your own backend server instead of using the default implementation. This gives you full control over how the chat messages are processed and responded to.
+
+### Server Configuration
 
 ```javascript
 concierge.init({
-  strict: true,  // Default is true
-  sources: [...]
+  server: {
+    baseUrl: 'https://your-api.com',  // Your API endpoint
+    apiKey: 'your-secret-key'         // Your authentication key
+  }
 });
 ```
 
-In strict mode:
+### API Endpoint Requirements
 
-- The AI will only use information from the provided sources
-- If asked about something not in the sources, it will politely decline to answer
-- Prevents the AI from making assumptions or guessing
+Your backend API should implement a completion endpoint that accepts POST requests at `${baseUrl}/completion` with the following structure:
+
+Request headers:
+```
+Content-Type: application/json
+X-Authorization-Token: your-api-key
+```
+
+Request body:
+```json
+{
+  "assistantName": "AI Assistant",
+  "sources": [...],           // Array of configured sources
+  "systemPrompt": "...",      // System prompt if configured
+  "userMessage": "..."        // The user's message
+  "categories": [...],         // Array of categories to use for this request
+}
+```
+
+Expected response:
+```json
+{
+  "text": "AI response text"  // The AI's response
+}
+```
+
+Error response:
+```json
+{
+  "error": {
+    "message": "Error description"
+  }
+}
+```
 
 ## Styling
 
