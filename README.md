@@ -8,6 +8,8 @@ An open-source JavaScript library for easily adding AI chat assistants to your w
 - 🎨 Customizable UI
 - 🤖 OpenAI integration out of the box
 - 📚 Support for loading external knowledge sources
+- 🔄 Custom backend support
+- 🏷️ Source categorization
 
 ## Quick Start
 
@@ -17,122 +19,168 @@ An open-source JavaScript library for easily adding AI chat assistants to your w
 <script src="https://dev.helloworld.ng/concierge.js"></script>
 ```
 
-2. Add a trigger element:
-
-```html
-<button id="chat-trigger">Chat with AI</button>
-```
-
-3. Initialize Concierge:
+2. Initialize Concierge:
 
 ```javascript
-const chat = concierge.init({
-  triggerSelector: '#chat-trigger',
-  name: 'AI Assistant',
-  keys: {
-    openai: 'your-openai-key'
-  }
-});
+const concierge = await Concierge.validateServer('https://your-server.com')
+  .then(builder => builder.new({
+    name: 'AI Assistant'
+  }));
+
+// Call load() to show the chat interface
+concierge.load();
 ```
 
 ## Configuration Options
 
 ```javascript
-concierge.init({
-  // Required
-  triggerSelector: '#chat-trigger',  // CSS selector for trigger element
-  
-  // Optional
-  name: 'AI Assistant',              // Name of your chat assistant
-  avatar: '<svg>...</svg>',          // SVG string or image URL
-  strict: true,                      // Enforce strict responses based on provided data
-  isFullScreen: true,               // Whether to show in full screen
-  color: {
-    chatBg: '#011B33',              // Chat background color
-    userBg: '#2563eb',              // User message background
-    text: '#f3f4f6',                // Text color
-    inputBg: '#1f2937',             // Input field background
-    buttonBg: '#2563eb',            // Submit button background
-  },
-  sources: [                         // External knowledge sources
-    {
-      type: 'web',
-      url: 'https://your-docs.com',
-      pages: ['/about', '/docs', '/api'] // Optional pages to load
+const concierge = await Concierge.validateServer('https://your-server.com')
+  .then(builder => builder.new({
+    // Optional configuration
+    name: 'AI Assistant',              // Name of your chat assistant
+    avatar: '<svg>...</svg>',          // SVG string or image URL
+    isFullScreen: true,               // Whether to show in full screen
+    color: {
+      chatBg: '#011B33',              // Chat background color
+      userBg: '#2563eb',              // User message background
+      text: '#f3f4f6',                // Text color
+      inputBg: '#1f2937',             // Input field background
+      buttonBg: '#2563eb',            // Submit button background
     },
+    categories: ['documentation', 'api'],  // Categories to filter knowledge by
+    sources: [                            // Array of knowledge sources
+      {
+        type: 'web',                      // Type can be 'web' or 'json'
+        url: 'https://your-docs.com/docs',
+        categories: ['documentation']      // Optional categories for this source
+      },
+      {
+        type: 'json',
+        url: 'https://your-docs.com/api.json',
+        categories: ['api']
+      }
+    ],
+    systemPrompt: 'Custom prompt...',     // System prompt for the AI                      // AI
+  }));
+```
+
+## Loading External Sources with Categories
+
+Concierge supports categorizing knowledge sources to help the AI provide more accurate and specific responses. Each source can have its own type and categories:
+
+```javascript
+const concierge = await Concierge.validateServer('https://your-server.com')
+  .then(builder => builder.new({
+    name: 'AI Assistant',
+    // Global categories (optional)
+    categories: [
+      'company-info',
+      'technical-docs',
+      'api-reference'
+    ],
+    // Knowledge sources with their own categories
+    sources: [
+      {
+        type: 'web',
+        url: 'https://your-website.com/about',
+        categories: ['company-info']
+      },
+      {
+        type: 'web',
+        url: 'https://your-website.com/docs',
+        categories: ['technical-docs']
+      },
+      {
+        type: 'json',
+        url: 'https://your-website.com/api.json',
+        categories: ['api-reference']
+      }
+    ]
+  }));
+```
+
+## Custom Backend Configuration
+
+Concierge requires a backend server to process chat messages. The server URL is specified during initialization:
+
+```javascript
+const concierge = await Concierge.validateServer('https://your-server.com')
+  .then(builder => builder.new({
+    name: 'AI Assistant',
+    systemPrompt: 'Custom system prompt...',
+    // Optional configuration
+    sources: [
+      {
+        type: 'web',
+        url: 'https://your-docs.com/docs',
+        categories: ['documentation']
+      }
+    ]
+  }));
+```
+
+### API Endpoint Requirements
+
+Your backend server must implement the following endpoint:
+
+- `GET /isConcierge` - Used during initialization to validate the server
+- `POST /completion` - Processes chat messages
+
+The completion endpoint accepts POST requests with the following structure:
+
+Request body:
+
+```json
+{
+  "assistantName": "AI Assistant",
+  "sources": [                // Array of source objects
     {
-      type: 'json',
-      url: 'https://your-docs.com/data.json'
+      "type": "web",         // 'web' or 'json'
+      "url": "...",
+      "categories": [...]    // Optional categories for this source
     }
   ],
-  systemPrompt: 'Custom prompt...',  // System prompt for the AI
-  model: 'gpt-4',                    // AI model to use
-  keys: {
-    openai: 'your-openai-key'       // Your OpenAI API key
+  "systemPrompt": "...",     // System prompt if configured
+  "userMessage": "...",      // The user's message
+  "categories": [...]        // Global categories to use for this request
+}
+```
+
+Expected response:
+
+```json
+{
+  "text": "AI response text"  // The AI's response
+}
+```
+
+Error response:
+
+```json
+{
+  "error": {
+    "message": "Error description"
   }
-});
+}
 ```
-
-## Loading External Sources
-
-Concierge can load external knowledge sources to provide context-aware responses. It supports two types of sources:
-
-### Web Pages
-
-```javascript
-concierge.init({
-  sources: [
-    {
-      type: 'web',
-      url: 'https://your-website.com',
-      pages: ['/about', '/docs', '/contact'] // Optional pages to load
-    }
-  ]
-});
-```
-
-### JSON Data
-
-```javascript
-concierge.init({
-  sources: [
-    {
-      type: 'json',
-      url: '/api/data.json'
-    }
-  ]
-});
-```
-
-## Strict Mode
-
-Enable strict mode to ensure the AI only responds with information from the provided sources:
-
-```javascript
-concierge.init({
-  strict: true,  // Default is true
-  sources: [...]
-});
-```
-
-In strict mode:
-
-- The AI will only use information from the provided sources
-- If asked about something not in the sources, it will politely decline to answer
-- Prevents the AI from making assumptions or guessing
 
 ## Styling
 
 The chat interface can be fully customized using the color configuration:
 
 ```javascript
-concierge.init({
-  color: {
-    chatBg: '#011B33',        // Chat background
-    userBg: '#2563eb',        // User message background
-    text: '#f3f4f6',          // Text color
-    inputBg: '#1f2937',       // Input field background
-    buttonBg: '#2563eb',      // Submit button background
-  }
-});
+  const concierge = await Concierge.validateServer('https://your-server.com')
+  .then(builder => builder.new({
+    color: {
+      chatBg: '#011B33',        // Chat background
+      userBg: '#2563eb',        // User message background
+      text: '#f3f4f6',          // Text color
+      inputBg: '#1f2937',       // Input field background
+      buttonBg: '#2563eb',      // Submit button background
+    }
+  }));
 ```
+
+## Customization
+
+You can customize the chat interface by extending the Concierge class and overriding the necessary methods.
