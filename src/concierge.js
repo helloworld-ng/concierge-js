@@ -699,6 +699,3 @@ class ConciergeBuilder {
 const Concierge = {
   validateServer: ConciergeImpl.validateServer
 };
-
-// Default export for easier importing
-export default Concierge; 
