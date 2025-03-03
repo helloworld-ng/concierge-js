@@ -156,6 +156,7 @@ class ConciergeImpl {
         background: linear-gradient(to bottom, ${color.chatBg} 20%, ${color.chatBg} 80%, transparent 100%);
         padding-bottom: 1.5rem;
         padding-top: 1rem;
+        border-radius: 10px 10px 0 0;
       }
 
       .concierge-header-content {
@@ -183,7 +184,7 @@ class ConciergeImpl {
         scroll-behavior: smooth;
         scrollbar-width: thin;
         scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
-        margin-top: 4rem;
+        margin-top: 6rem;
       }
 
       .concierge-chat-container::-webkit-scrollbar {
@@ -216,12 +217,13 @@ class ConciergeImpl {
       }
 
       .concierge-agent-icon {
-        width: 2rem;
-        height: 2rem;
+        width: 3rem;
+        height: 3rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
+        overflow: hidden;
       }
 
       .concierge-agent-icon.active {
@@ -300,9 +302,10 @@ class ConciergeImpl {
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(to bottom, ${color.chatBg} 20%, ${color.chatBg} 80%, transparent 100%);
+        background: linear-gradient(to bottom, ${color.chatBg} 20%, ${color.chatBg} 100%);
         padding-top: 1.5rem;
         padding-bottom: 1.5rem;
+        border-radius: 0 0 10px 10px;
       }
 
       .concierge-input-form {
@@ -322,6 +325,12 @@ class ConciergeImpl {
         border: none;
         outline: none;
         color: ${color.text};
+      }
+
+      @media (max-width: 768px) {
+        .concierge-input {
+          font-size: 16px;
+        }
       }
 
       .concierge-input::placeholder {
@@ -630,6 +639,8 @@ class ConciergeImpl {
       requestAnimationFrame(() => {
         overlay.classList.add('open');
         this.#chatInterface?.classList.add('open');
+        const input = this.#chatInterface?.querySelector('#chat-input');
+        input?.focus();
       });
     }
   }
